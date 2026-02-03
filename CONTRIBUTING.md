@@ -36,27 +36,36 @@ git push -u origin fs-dev
 📝 Commit Message Rules
 
 Always write clear and meaningful commit messages:
-
 <initials>-<type>: short description
 
-
 Examples:
-
 fs-feat: create login page layout
-fs-feat: add form validation
 fs-fix: handle empty input error
 an-feat: integrate wallet connection
 ni-docs: update README
 
 
 Typical Git workflow:
-
 git add .
 git commit -m "fs-feat: create login page layout"
 git push origin fs-dev
 
-🤝 FINAL NOTE
 
+🔄 Pulling Updates from GitHub
+
+To keep your branch up-to-date with main or other branches:
+
+# Fetch latest changes from remote
+git fetch origin
+
+# Merge main branch into your dev branch
+git checkout fs-dev
+git merge origin/main
+
+
+Always resolve any merge conflicts carefully, then commit the resolved changes.
+
+
+🤝 FINAL NOTE
 Work on your own dev branch.
 Write good commit messages.
-
