@@ -36,30 +36,6 @@ This approach ensures **privacy, integrity, and traceability** of medical data.
 
 ---
 
-## 🛠️ Tech Stack
-
-### Frontend
-- React.js  
-- Tailwind CSS  
-- Ethers.js  
-
-### Backend
-- Java  
-- Spring Boot  
-- Hibernate  
-
-### Database
-- MySQL (Metadata and User Roles)
-
-### Blockchain
-- Solidity (Smart Contracts)  
-- Hardhat / Ganache  
-
-### Storage
-- IPFS (InterPlanetary File System)
-
----
-
 ## 🔒 Security Considerations
 
 - Medical files are **never stored directly on-chain**
