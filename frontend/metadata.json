@@ -1,0 +1,5 @@
+{
+  "name": "MyHealthChain DApp",
+  "description": "A healthcare blockchain interface for secure medical record storage and patient-controlled access.",
+  "requestFramePermissions": []
+}

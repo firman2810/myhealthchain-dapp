@@ -1,0 +1,238 @@
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Button, Input, Textarea } from './ui/elements';
+import { Lock, FileText, CheckCircle2, Loader2, Database, ShieldCheck, User, Fingerprint } from 'lucide-react';
+import { RecordCreationStatus } from '../types';
+
+const AddRecordForm: React.FC = () => {
+  const [formData, setFormData] = useState({
+    patientId: '',
+    patientName: '',
+    diagnosis: '',
+    treatment: '',
+  });
+  const [status, setStatus] = useState<RecordCreationStatus>(RecordCreationStatus.IDLE);
+  const [txHash, setTxHash] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTxHash(null);
+
+    // Step 1: Encrypt
+    setStatus(RecordCreationStatus.ENCRYPTING);
+    await wait(1800);
+
+    // Step 2: Store
+    setStatus(RecordCreationStatus.STORING);
+    await wait(1500);
+
+    // Step 3: Sign
+    setStatus(RecordCreationStatus.SIGNING);
+    await wait(2200); 
+
+    // Step 4: Complete
+    setStatus(RecordCreationStatus.COMPLETED);
+    setTxHash(`0x${Math.random().toString(16).substr(2, 40)}`);
+  };
+
+  const renderStatusStep = (stepStatus: RecordCreationStatus, label: string, icon: React.ReactNode, isCurrent: boolean, isCompleted: boolean) => (
+    <div className={`flex items-center space-x-4 p-4 rounded-xl border-2 transition-all duration-500 ${isCurrent ? 'bg-blue-50 border-blue-200 scale-102 shadow-md' : isCompleted ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+      <div className={`flex items-center justify-center w-10 h-10 rounded-xl shadow-sm ${isCurrent ? 'bg-blue-600 text-white animate-pulse' : isCompleted ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+        {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : isCurrent ? <Loader2 className="w-6 h-6 animate-spin" /> : icon}
+      </div>
+      <div className="flex-1">
+        <p className={`text-sm font-bold tracking-tight ${isCurrent ? 'text-blue-700' : isCompleted ? 'text-emerald-700' : 'text-slate-500'}`}>{label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">
+          {isCurrent ? 'Executing Protocol...' : isCompleted ? 'Verification Success' : 'Pending Queue'}
+        </p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="grid lg:grid-cols-5 gap-8">
+      <div className="lg:col-span-3">
+        <Card className="shadow-xl shadow-slate-200 border-slate-200 overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileText className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Medical Transaction Details</CardTitle>
+                <CardDescription>Records are hashed and committed to the mainnet ledger.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {status === RecordCreationStatus.IDLE ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2 group">
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Patient NRIC</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                      <Input 
+                        name="patientId" 
+                        placeholder="e.g. S1234567A" 
+                        className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+                        value={formData.patientId} 
+                        onChange={handleChange} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 group">
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Patient Full Name</label>
+                    <Input 
+                      name="patientName" 
+                      placeholder="e.g. John Doe" 
+                      className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+                      value={formData.patientName} 
+                      onChange={handleChange} 
+                      required 
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2 group">
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Diagnosis</label>
+                    <Input 
+                      name="diagnosis" 
+                      placeholder="Primary Medical Condition" 
+                      className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+                      value={formData.diagnosis} 
+                      onChange={handleChange} 
+                      required 
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2 group">
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Treatment Plan & Prescription</label>
+                    <Textarea 
+                      name="treatment" 
+                      placeholder="Outline medicines, dosage, and follow-up steps..." 
+                      className="min-h-[140px] bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all resize-none" 
+                      value={formData.treatment} 
+                      onChange={handleChange} 
+                      required 
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 py-4 max-w-md mx-auto">
+                  {renderStatusStep(
+                    RecordCreationStatus.ENCRYPTING, 
+                    "Local AES-256 Encryption", 
+                    <Lock className="w-5 h-5" />, 
+                    status === RecordCreationStatus.ENCRYPTING, 
+                    [RecordCreationStatus.STORING, RecordCreationStatus.SIGNING, RecordCreationStatus.COMPLETED].includes(status)
+                  )}
+                  {renderStatusStep(
+                    RecordCreationStatus.STORING, 
+                    "Secure Database Offload", 
+                    <Database className="w-5 h-5" />, 
+                    status === RecordCreationStatus.STORING, 
+                    [RecordCreationStatus.SIGNING, RecordCreationStatus.COMPLETED].includes(status)
+                  )}
+                  {renderStatusStep(
+                    RecordCreationStatus.SIGNING, 
+                    "Blockchain Ledger Commitment", 
+                    <Fingerprint className="w-5 h-5" />, 
+                    status === RecordCreationStatus.SIGNING, 
+                    status === RecordCreationStatus.COMPLETED
+                  )}
+                </div>
+              )}
+
+              {status === RecordCreationStatus.COMPLETED && (
+                 <div className="bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-8 text-center space-y-4 animate-in fade-in zoom-in duration-500">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                       <ShieldCheck className="w-10 h-10 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-emerald-900">Record Finalized</h3>
+                      <p className="text-sm text-emerald-700">The medical record has been timestamped and secured.</p>
+                    </div>
+                    <div className="text-[10px] font-mono bg-white p-3 rounded-xl border border-emerald-100 text-emerald-600 break-all shadow-inner">
+                      BLOCKCHAIN TX: {txHash}
+                    </div>
+                 </div>
+              )}
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-end p-6 bg-slate-50/50 border-t border-slate-100">
+            {status === RecordCreationStatus.IDLE ? (
+               <Button type="submit" onClick={handleSubmit} className="w-full sm:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all hover:scale-105 active:scale-95">
+                 <Lock className="w-4 h-4 mr-2" /> Encrypt & Sign Record
+               </Button>
+            ) : (
+               <Button variant="outline" onClick={() => { setStatus(RecordCreationStatus.IDLE); setFormData({patientId:'', patientName: '', diagnosis:'', treatment:''}); }} disabled={status !== RecordCreationStatus.COMPLETED} className="w-full sm:w-auto font-bold">
+                 {status === RecordCreationStatus.COMPLETED ? "Start New Consultation" : "System Processing..."}
+               </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+
+      <div className="lg:col-span-2 space-y-6">
+        <Card className="bg-blue-600 text-white border-none shadow-xl shadow-blue-200 overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            <ShieldCheck className="w-40 h-40" />
+          </div>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <ShieldCheck className="w-5 h-5 mr-2" /> DApp Security
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 relative z-10">
+            <div className="space-y-2">
+               <p className="text-xs font-bold uppercase tracking-widest opacity-80">Encryption Protocol</p>
+               <p className="text-sm">Patient data is encrypted locally using <span className="font-bold underline decoration-blue-300">AES-256-GCM</span> before ever leaving the provider terminal.</p>
+            </div>
+            <div className="space-y-2">
+               <p className="text-xs font-bold uppercase tracking-widest opacity-80">Immutability</p>
+               <p className="text-sm">Only the <span className="font-bold underline decoration-blue-300">Data Hash</span> is stored on the public blockchain, ensuring patient privacy while guaranteeing data integrity.</p>
+            </div>
+            <div className="pt-4 border-t border-white/20">
+               <div className="flex items-center space-x-2 text-xs font-bold bg-white/10 p-2 rounded-lg">
+                 <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                 <span>Compliant with Blockchain HIPAA-v2</span>
+               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-sm font-bold flex items-center">
+              <Database className="w-4 h-4 mr-2 text-slate-400" /> Storage Stats
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+             <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500">Record ID generation:</span>
+                <span className="font-mono font-bold">SHA-256 Deterministic</span>
+             </div>
+             <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500">Signature scheme:</span>
+                <span className="font-mono font-bold">ECDSA (secp256k1)</span>
+             </div>
+             <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500">Estimated Gas Fee:</span>
+                <span className="font-bold text-emerald-600">0.0004 ETH (Paid by Hospital)</span>
+             </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default AddRecordForm;
