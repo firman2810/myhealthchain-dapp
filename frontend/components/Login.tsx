@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Input, CardFooter } from './ui/elements';
 import { Activity, Stethoscope, User, ArrowRight, CheckCircle2, ArrowLeft, UserPlus } from 'lucide-react';
+import { apiFetch, setToken } from '../client';
 
 interface LoginProps {
-  onLogin: (role: 'doctor' | 'patient') => void;
+  onLogin: (role: 'doctor' | 'patient', displayName: string, username: string) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -12,30 +13,64 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  
-  // Reset success state when switching between login/register
+  const [error, setError] = useState<string | null>(null);
+
+  // Form fields
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+
+  // Reset state when switching between login/register
   useEffect(() => {
     setSuccess(false);
+    setError(null);
   }, [isRegistering]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (isRegistering && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
-    
-    // Simulate network request
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
       if (isRegistering) {
+        await apiFetch<{ message: string }>('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            identifier,
+            password,
+            displayName: fullName || identifier,
+            role: role === 'doctor' ? 'DOCTOR' : 'PATIENT',
+          }),
+        });
         setSuccess(true);
-        // After 2 seconds of success message, flip to login
         setTimeout(() => {
           setIsRegistering(false);
           setSuccess(false);
         }, 2000);
       } else {
-        onLogin(role);
+        const data = await apiFetch<{ token: string; role: string; displayName: string }>('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ identifier, password }),
+        });
+        setToken(data.token);
+        onLogin(
+          data.role === 'DOCTOR' ? 'doctor' : 'patient',
+          data.displayName,
+          identifier,
+        );
       }
-    }, 1200);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,8 +111,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               {isRegistering ? 'Create Account' : 'Welcome Back'}
             </CardTitle>
             <CardDescription className="text-center">
-              {isRegistering 
-                ? 'Register your credentials on the MyHealthChain network' 
+              {isRegistering
+                ? 'Register your credentials on the MyHealthChain network'
                 : 'Enter your details to access the decentralized ledger'}
             </CardDescription>
           </CardHeader>
@@ -87,11 +122,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => setRole('doctor')}
-                className={`group flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${
-                  role === 'doctor'
+                className={`group flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${role === 'doctor'
                     ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-inner'
                     : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'
-                }`}
+                  }`}
               >
                 <div className={`p-2 rounded-lg transition-colors ${role === 'doctor' ? 'bg-blue-600 text-white' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
                   <Stethoscope className="w-6 h-6" />
@@ -101,11 +135,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => setRole('patient')}
-                className={`group flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${
-                  role === 'patient'
+                className={`group flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${role === 'patient'
                     ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-inner'
                     : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'
-                }`}
+                  }`}
               >
                 <div className={`p-2 rounded-lg transition-colors ${role === 'patient' ? 'bg-blue-600 text-white' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
                   <User className="w-6 h-6" />
@@ -115,6 +148,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {isRegistering && (
+                <div className="space-y-2 group animate-in slide-in-from-top-2 duration-300">
+                  <label className="text-sm font-semibold text-slate-700 group-focus-within:text-blue-600 transition-colors">
+                    Full Name
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder={role === 'doctor' ? "Dr. Sarah Smith" : "John Doe"}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="bg-slate-50/50 focus:bg-white transition-all border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
+              )}
+
               <div className="space-y-2 group">
                 <label className="text-sm font-semibold text-slate-700 group-focus-within:text-blue-600 transition-colors">
                   {role === 'doctor' ? 'Medical License ID' : 'NRIC'}
@@ -122,6 +171,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <Input
                   type="text"
                   placeholder={role === 'doctor' ? "MD-883920" : "S1234567A"}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
                   className="bg-slate-50/50 focus:bg-white transition-all border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 />
@@ -134,6 +185,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <Input
                   type="password"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   className="bg-slate-50/50 focus:bg-white transition-all border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 />
@@ -147,9 +200,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   <Input
                     type="password"
                     placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     className="bg-slate-50/50 focus:bg-white transition-all border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                   />
+                </div>
+              )}
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium animate-in fade-in duration-200">
+                  {error}
                 </div>
               )}
 
@@ -178,23 +239,23 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             {isRegistering ? (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setIsRegistering(false)}
                 className="text-sm font-medium text-slate-500 hover:text-blue-600 flex items-center justify-center w-full transition-colors"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Already have an account? Sign In
               </button>
             ) : (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setIsRegistering(true)}
                 className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center justify-center w-full transition-all"
               >
                 No account? Create a secure identity
               </button>
             )}
-            
+
             <p className="text-[10px] text-center text-slate-300 uppercase tracking-widest pt-4">
               Protected by MyHealthChain Secure Enclave v2.4
             </p>

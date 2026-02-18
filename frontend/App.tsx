@@ -5,42 +5,45 @@ import GetRecordView from './components/GetRecordView';
 import Login from './components/Login';
 import { Activity, Stethoscope, User, Search, FilePlus, LogOut, ShieldCheck, Database, Bot, Terminal, Shield, Layout, Settings, Sun, Moon, Wifi, WifiOff } from 'lucide-react';
 import { Button, Badge } from './components/ui/elements';
+import { apiFetch, clearToken, getToken } from './client';
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!getToken());
   const [userRole, setUserRole] = useState<'doctor' | 'patient' | null>(null);
+  const [displayName, setDisplayName] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
   const [view, setView] = useState<'doctor-add' | 'doctor-get' | 'patient-dash'>('doctor-add');
 
   const [backendStatus, setBackendStatus] = useState<string>('Checking connection...');
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
-  /* Backend connection logic - commented out for frontend preview
+  // Backend health check
   useEffect(() => {
-    fetch('/api/health')
-      .then(res => {
-        if (res.ok) {
-          setIsConnected(true);
-          return res.text();
-        }
-        throw new Error('Network response was not ok');
+    apiFetch<{ status: string }>('/health')
+      .then(() => {
+        setIsConnected(true);
+        setBackendStatus('Connected');
       })
-      .then(data => setBackendStatus(`Connected: ${ data } `))
       .catch(() => {
         setIsConnected(false);
         setBackendStatus('Backend disconnected (Is Spring Boot running?)');
       });
   }, []);
-  */
 
-  const handleLogin = (role: 'doctor' | 'patient') => {
+  const handleLogin = (role: 'doctor' | 'patient', name: string, user: string) => {
     setUserRole(role);
+    setDisplayName(name);
+    setUsername(user);
     setIsAuthenticated(true);
     setView(role === 'doctor' ? 'doctor-add' : 'patient-dash');
   };
 
   const handleLogout = () => {
+    clearToken();
     setIsAuthenticated(false);
     setUserRole(null);
+    setDisplayName('');
+    setUsername('');
   };
 
   if (!isAuthenticated) {
@@ -97,7 +100,7 @@ const App: React.FC = () => {
             </div>
             <div className="hidden sm:flex items-center space-x-3 pr-2 border-r border-slate-200">
               <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-slate-800">{userRole === 'doctor' ? 'Dr. Sarah Smith' : 'John Doe'}</span>
+                <span className="text-sm font-bold text-slate-800">{displayName}</span>
                 <Badge variant="outline" className="text-[10px] h-4 bg-slate-50 px-1 border-slate-200 text-slate-500">
                   {userRole === 'doctor' ? 'License Verified' : 'Personal Identity Verified'}
                 </Badge>
@@ -136,7 +139,7 @@ const App: React.FC = () => {
           )}
 
           {view === 'patient-dash' && userRole === 'patient' && (
-            <PatientDashboard />
+            <PatientDashboard username={username} />
           )}
         </div>
       </main>
