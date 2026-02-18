@@ -3,6 +3,18 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Button, Input, Textarea } from './ui/elements';
 import { Lock, FileText, CheckCircle2, Loader2, Database, ShieldCheck, User, Fingerprint } from 'lucide-react';
 import { RecordCreationStatus } from '../types';
+import { apiFetch } from '../client';
+
+interface RecordResponse {
+  id: string;
+  patientName: string;
+  doctorName: string;
+  diagnosis: string;
+  treatment: string;
+  date: string;
+  dbHash: string;
+  chainHash: string;
+}
 
 const AddRecordForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +25,7 @@ const AddRecordForm: React.FC = () => {
   });
   const [status, setStatus] = useState<RecordCreationStatus>(RecordCreationStatus.IDLE);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,22 +36,31 @@ const AddRecordForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTxHash(null);
+    setError(null);
 
-    // Step 1: Encrypt
+    // Step 1: Visual — Encrypt
     setStatus(RecordCreationStatus.ENCRYPTING);
-    await wait(1800);
+    await wait(1200);
 
-    // Step 2: Store
+    // Step 2: Store — actual API call happens here
     setStatus(RecordCreationStatus.STORING);
-    await wait(1500);
+    try {
+      const result = await apiFetch<RecordResponse>('/records', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
 
-    // Step 3: Sign
-    setStatus(RecordCreationStatus.SIGNING);
-    await wait(2200); 
+      // Step 3: Visual — Sign
+      setStatus(RecordCreationStatus.SIGNING);
+      await wait(1500);
 
-    // Step 4: Complete
-    setStatus(RecordCreationStatus.COMPLETED);
-    setTxHash(`0x${Math.random().toString(16).substr(2, 40)}`);
+      // Step 4: Complete
+      setStatus(RecordCreationStatus.COMPLETED);
+      setTxHash(result.chainHash);
+    } catch (err: any) {
+      setError(err.message || 'Failed to create record');
+      setStatus(RecordCreationStatus.IDLE);
+    }
   };
 
   const renderStatusStep = (stepStatus: RecordCreationStatus, label: string, icon: React.ReactNode, isCurrent: boolean, isCompleted: boolean) => (
@@ -78,104 +100,110 @@ const AddRecordForm: React.FC = () => {
                     <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Patient NRIC</label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                      <Input 
-                        name="patientId" 
-                        placeholder="e.g. S1234567A" 
+                      <Input
+                        name="patientId"
+                        placeholder="e.g. S1234567A"
                         className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
-                        value={formData.patientId} 
-                        onChange={handleChange} 
-                        required 
+                        value={formData.patientId}
+                        onChange={handleChange}
+                        required
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2 group">
                     <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Patient Full Name</label>
-                    <Input 
-                      name="patientName" 
-                      placeholder="e.g. John Doe" 
+                    <Input
+                      name="patientName"
+                      placeholder="e.g. John Doe"
                       className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
-                      value={formData.patientName} 
-                      onChange={handleChange} 
-                      required 
+                      value={formData.patientName}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
 
                   <div className="md:col-span-2 space-y-2 group">
                     <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Diagnosis</label>
-                    <Input 
-                      name="diagnosis" 
-                      placeholder="Primary Medical Condition" 
+                    <Input
+                      name="diagnosis"
+                      placeholder="Primary Medical Condition"
                       className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
-                      value={formData.diagnosis} 
-                      onChange={handleChange} 
-                      required 
+                      value={formData.diagnosis}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
 
                   <div className="md:col-span-2 space-y-2 group">
                     <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Treatment Plan & Prescription</label>
-                    <Textarea 
-                      name="treatment" 
-                      placeholder="Outline medicines, dosage, and follow-up steps..." 
-                      className="min-h-[140px] bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all resize-none" 
-                      value={formData.treatment} 
-                      onChange={handleChange} 
-                      required 
+                    <Textarea
+                      name="treatment"
+                      placeholder="Outline medicines, dosage, and follow-up steps..."
+                      className="min-h-[140px] bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all resize-none"
+                      value={formData.treatment}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
+
+                  {error && (
+                    <div className="md:col-span-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
+                      {error}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4 py-4 max-w-md mx-auto">
                   {renderStatusStep(
-                    RecordCreationStatus.ENCRYPTING, 
-                    "Local AES-256 Encryption", 
-                    <Lock className="w-5 h-5" />, 
-                    status === RecordCreationStatus.ENCRYPTING, 
+                    RecordCreationStatus.ENCRYPTING,
+                    "Local AES-256 Encryption",
+                    <Lock className="w-5 h-5" />,
+                    status === RecordCreationStatus.ENCRYPTING,
                     [RecordCreationStatus.STORING, RecordCreationStatus.SIGNING, RecordCreationStatus.COMPLETED].includes(status)
                   )}
                   {renderStatusStep(
-                    RecordCreationStatus.STORING, 
-                    "Secure Database Offload", 
-                    <Database className="w-5 h-5" />, 
-                    status === RecordCreationStatus.STORING, 
+                    RecordCreationStatus.STORING,
+                    "Secure Database Offload",
+                    <Database className="w-5 h-5" />,
+                    status === RecordCreationStatus.STORING,
                     [RecordCreationStatus.SIGNING, RecordCreationStatus.COMPLETED].includes(status)
                   )}
                   {renderStatusStep(
-                    RecordCreationStatus.SIGNING, 
-                    "Blockchain Ledger Commitment", 
-                    <Fingerprint className="w-5 h-5" />, 
-                    status === RecordCreationStatus.SIGNING, 
+                    RecordCreationStatus.SIGNING,
+                    "Blockchain Ledger Commitment",
+                    <Fingerprint className="w-5 h-5" />,
+                    status === RecordCreationStatus.SIGNING,
                     status === RecordCreationStatus.COMPLETED
                   )}
                 </div>
               )}
 
               {status === RecordCreationStatus.COMPLETED && (
-                 <div className="bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-8 text-center space-y-4 animate-in fade-in zoom-in duration-500">
-                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                       <ShieldCheck className="w-10 h-10 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-emerald-900">Record Finalized</h3>
-                      <p className="text-sm text-emerald-700">The medical record has been timestamped and secured.</p>
-                    </div>
-                    <div className="text-[10px] font-mono bg-white p-3 rounded-xl border border-emerald-100 text-emerald-600 break-all shadow-inner">
-                      BLOCKCHAIN TX: {txHash}
-                    </div>
-                 </div>
+                <div className="bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-8 text-center space-y-4 animate-in fade-in zoom-in duration-500">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <ShieldCheck className="w-10 h-10 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-emerald-900">Record Finalized</h3>
+                    <p className="text-sm text-emerald-700">The medical record has been timestamped and secured.</p>
+                  </div>
+                  <div className="text-[10px] font-mono bg-white p-3 rounded-xl border border-emerald-100 text-emerald-600 break-all shadow-inner">
+                    BLOCKCHAIN TX: {txHash}
+                  </div>
+                </div>
               )}
             </form>
           </CardContent>
           <CardFooter className="flex justify-end p-6 bg-slate-50/50 border-t border-slate-100">
             {status === RecordCreationStatus.IDLE ? (
-               <Button type="submit" onClick={handleSubmit} className="w-full sm:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all hover:scale-105 active:scale-95">
-                 <Lock className="w-4 h-4 mr-2" /> Encrypt & Sign Record
-               </Button>
+              <Button type="submit" onClick={handleSubmit} className="w-full sm:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all hover:scale-105 active:scale-95">
+                <Lock className="w-4 h-4 mr-2" /> Encrypt & Sign Record
+              </Button>
             ) : (
-               <Button variant="outline" onClick={() => { setStatus(RecordCreationStatus.IDLE); setFormData({patientId:'', patientName: '', diagnosis:'', treatment:''}); }} disabled={status !== RecordCreationStatus.COMPLETED} className="w-full sm:w-auto font-bold">
-                 {status === RecordCreationStatus.COMPLETED ? "Start New Consultation" : "System Processing..."}
-               </Button>
+              <Button variant="outline" onClick={() => { setStatus(RecordCreationStatus.IDLE); setFormData({ patientId: '', patientName: '', diagnosis: '', treatment: '' }); setError(null); }} disabled={status !== RecordCreationStatus.COMPLETED} className="w-full sm:w-auto font-bold">
+                {status === RecordCreationStatus.COMPLETED ? "Start New Consultation" : "System Processing..."}
+              </Button>
             )}
           </CardFooter>
         </Card>
@@ -193,18 +221,18 @@ const AddRecordForm: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4 relative z-10">
             <div className="space-y-2">
-               <p className="text-xs font-bold uppercase tracking-widest opacity-80">Encryption Protocol</p>
-               <p className="text-sm">Patient data is encrypted locally using <span className="font-bold underline decoration-blue-300">AES-256-GCM</span> before ever leaving the provider terminal.</p>
+              <p className="text-xs font-bold uppercase tracking-widest opacity-80">Encryption Protocol</p>
+              <p className="text-sm">Patient data is encrypted locally using <span className="font-bold underline decoration-blue-300">AES-256-GCM</span> before ever leaving the provider terminal.</p>
             </div>
             <div className="space-y-2">
-               <p className="text-xs font-bold uppercase tracking-widest opacity-80">Immutability</p>
-               <p className="text-sm">Only the <span className="font-bold underline decoration-blue-300">Data Hash</span> is stored on the public blockchain, ensuring patient privacy while guaranteeing data integrity.</p>
+              <p className="text-xs font-bold uppercase tracking-widest opacity-80">Immutability</p>
+              <p className="text-sm">Only the <span className="font-bold underline decoration-blue-300">Data Hash</span> is stored on the public blockchain, ensuring patient privacy while guaranteeing data integrity.</p>
             </div>
             <div className="pt-4 border-t border-white/20">
-               <div className="flex items-center space-x-2 text-xs font-bold bg-white/10 p-2 rounded-lg">
-                 <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                 <span>Compliant with Blockchain HIPAA-v2</span>
-               </div>
+              <div className="flex items-center space-x-2 text-xs font-bold bg-white/10 p-2 rounded-lg">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span>Compliant with Blockchain HIPAA-v2</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -216,18 +244,18 @@ const AddRecordForm: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-             <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500">Record ID generation:</span>
-                <span className="font-mono font-bold">SHA-256 Deterministic</span>
-             </div>
-             <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500">Signature scheme:</span>
-                <span className="font-mono font-bold">ECDSA (secp256k1)</span>
-             </div>
-             <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500">Estimated Gas Fee:</span>
-                <span className="font-bold text-emerald-600">0.0004 ETH (Paid by Hospital)</span>
-             </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-500">Record ID generation:</span>
+              <span className="font-mono font-bold">SHA-256 Deterministic</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-500">Signature scheme:</span>
+              <span className="font-mono font-bold">ECDSA (secp256k1)</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-500">Estimated Gas Fee:</span>
+              <span className="font-bold text-emerald-600">0.0004 ETH (Paid by Hospital)</span>
+            </div>
           </CardContent>
         </Card>
       </div>
