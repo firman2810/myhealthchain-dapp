@@ -26,7 +26,7 @@ const GetRecordView: React.FC = () => {
 
     // Visual step 1: Query Ledger
     setVerificationStep(1);
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 5000));
 
     // Visual step 2: Fetch from Secure DB — actual API call
     setVerificationStep(2);
@@ -35,7 +35,7 @@ const GetRecordView: React.FC = () => {
 
       // Visual step 3: Hash Comparison
       setVerificationStep(3);
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 5000));
 
       setFoundRecords(records);
     } catch (err: any) {
@@ -65,7 +65,7 @@ const GetRecordView: React.FC = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                 <Input
-                  placeholder="Patient NRIC (e.g. S1234567A)"
+                  placeholder="Patient NRIC (e.g. 001022010001)"
                   className="pl-10 h-11"
                   value={nric}
                   onChange={(e) => setNric(e.target.value)}
