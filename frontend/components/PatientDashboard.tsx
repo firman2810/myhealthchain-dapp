@@ -28,7 +28,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
 
     // Step 1: Visual — Query Ledger
     setSyncStep(1);
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 5000));
 
     // Step 2: Visual — Retrieve Hashes + actual API call
     setSyncStep(2);
@@ -37,7 +37,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
 
       // Step 3: Visual — Compare Hashes
       setSyncStep(3);
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 5000));
 
       setMyRecords(records);
       setStatus('completed');
@@ -215,11 +215,11 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
             <div
               key={idx}
               className={`flex items-center p-4 rounded-xl border-2 transition-all duration-500 ${syncStep > idx ? 'bg-emerald-50 border-emerald-100 opacity-100' :
-                  syncStep === idx + 1 ? 'bg-blue-50 border-blue-200 scale-105 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-40'
+                syncStep === idx + 1 ? 'bg-blue-50 border-blue-200 scale-105 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-40'
                 }`}
             >
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-4 ${syncStep > idx ? 'bg-emerald-600 text-white' :
-                  syncStep === idx + 1 ? 'bg-blue-600 text-white animate-pulse' : 'bg-slate-200 text-slate-400'
+                syncStep === idx + 1 ? 'bg-blue-600 text-white animate-pulse' : 'bg-slate-200 text-slate-400'
                 }`}>
                 {step.icon}
               </div>

@@ -40,7 +40,7 @@ const AddRecordForm: React.FC = () => {
 
     // Step 1: Visual — Encrypt
     setStatus(RecordCreationStatus.ENCRYPTING);
-    await wait(1200);
+    await wait(5000);
 
     // Step 2: Store — actual API call happens here
     setStatus(RecordCreationStatus.STORING);
@@ -52,7 +52,7 @@ const AddRecordForm: React.FC = () => {
 
       // Step 3: Visual — Sign
       setStatus(RecordCreationStatus.SIGNING);
-      await wait(1500);
+      await wait(15000);
 
       // Step 4: Complete
       setStatus(RecordCreationStatus.COMPLETED);
@@ -102,7 +102,7 @@ const AddRecordForm: React.FC = () => {
                       <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                       <Input
                         name="patientId"
-                        placeholder="e.g. S1234567A"
+                        placeholder="e.g. 001022010001"
                         className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
                         value={formData.patientId}
                         onChange={handleChange}
@@ -226,7 +226,7 @@ const AddRecordForm: React.FC = () => {
             </div>
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase tracking-widest opacity-80">Immutability</p>
-              <p className="text-sm">Only the <span className="font-bold underline decoration-blue-300">Data Hash</span> is stored on the public blockchain, ensuring patient privacy while guaranteeing data integrity.</p>
+              <p className="text-sm">Only the <span className="font-bold underline decoration-blue-300">Data Hash</span> is stored on the private blockchain, ensuring patient privacy while guaranteeing data integrity.</p>
             </div>
             <div className="pt-4 border-t border-white/20">
               <div className="flex items-center space-x-2 text-xs font-bold bg-white/10 p-2 rounded-lg">
@@ -251,10 +251,6 @@ const AddRecordForm: React.FC = () => {
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-500">Signature scheme:</span>
               <span className="font-mono font-bold">ECDSA (secp256k1)</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500">Estimated Gas Fee:</span>
-              <span className="font-bold text-emerald-600">0.0004 ETH (Paid by Hospital)</span>
             </div>
           </CardContent>
         </Card>
