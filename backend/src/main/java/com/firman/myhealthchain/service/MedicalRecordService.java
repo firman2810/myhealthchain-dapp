@@ -1,7 +1,10 @@
 package com.firman.myhealthchain.service;
 
+import com.firman.myhealthchain.audit.Audited;
 import com.firman.myhealthchain.dto.CreateRecordRequest;
 import com.firman.myhealthchain.dto.MedicalRecordResponse;
+import com.firman.myhealthchain.model.AuditAction;
+import com.firman.myhealthchain.model.AuditTargetType;
 import com.firman.myhealthchain.model.MedicalRecord;
 import com.firman.myhealthchain.model.User;
 import com.firman.myhealthchain.repo.MedicalRecordRepository;
@@ -29,6 +32,7 @@ public class MedicalRecordService {
     @Autowired
     private UserRepo userRepo;
 
+    @Audited(action = AuditAction.CREATE_RECORD, targetType = AuditTargetType.MEDICAL_RECORD, targetIdSpel = "#result.recordId", patientRefSpel = "#request.patientId")
     public MedicalRecordResponse createRecord(CreateRecordRequest request, String doctorUsername) {
         User doctor = userRepo.findByUsername(doctorUsername)
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
@@ -54,10 +58,10 @@ public class MedicalRecordService {
         record.setDoctor(doctor);
 
         recordRepo.save(record);
-
         return toResponse(record);
     }
 
+    @Audited(action = AuditAction.VIEW_RECORD, targetType = AuditTargetType.PATIENT, targetIdSpel = "#patientId", patientRefSpel = "#patientId")
     public List<MedicalRecordResponse> getRecordsByPatientId(String patientId) {
         return recordRepo.findByPatientIdOrderByDateDesc(patientId)
                 .stream()

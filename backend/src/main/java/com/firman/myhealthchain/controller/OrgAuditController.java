@@ -36,14 +36,16 @@ public class OrgAuditController {
     }
 
     @GetMapping("/dashboard-stats")
-    public ResponseEntity<DashboardStatsResponse> getDashboardStats(Authentication authentication) {
+    public ResponseEntity<DashboardStatsResponse> getDashboardStats(
+            @RequestParam(required = false, defaultValue = "7d") String range,
+            Authentication authentication) {
 
         Long orgId = getOrganizationId(authentication);
         if (orgId == null) {
             return ResponseEntity.ok(new DashboardStatsResponse(0, 0, 0, 0));
         }
 
-        DashboardStatsResponse stats = auditLogService.getDashboardStats(orgId);
+        DashboardStatsResponse stats = auditLogService.getDashboardStats(orgId, range);
         return ResponseEntity.ok(stats);
     }
 

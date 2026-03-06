@@ -61,7 +61,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Role-restricted endpoints
                         .requestMatchers(HttpMethod.POST, "/api/records").hasRole("DOCTOR")
+                        .requestMatchers(HttpMethod.GET, "/api/patients/lookup").hasRole("DOCTOR")
                         .requestMatchers(HttpMethod.GET, "/api/patients/*/records").authenticated()
+                        // Auditor-only endpoints
+                        .requestMatchers("/api/org/**").hasRole("HOSPITAL_AUDITOR")
                         // All other /api/** endpoints require authentication
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())

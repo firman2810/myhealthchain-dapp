@@ -29,4 +29,13 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
         long countByOrganizationIdAndStatusAndTimestampAfter(Long organizationId, AuditStatus status,
                         LocalDateTime since);
+
+        /**
+         * Fetch all logs within a date range for a given org (used for daily
+         * aggregation).
+         */
+        @Query("SELECT a FROM AuditLog a WHERE a.organizationId = :orgId " +
+                        "AND a.timestamp >= :since ORDER BY a.timestamp ASC")
+        List<AuditLog> findByOrgSince(@Param("orgId") Long orgId,
+                        @Param("since") LocalDateTime since);
 }

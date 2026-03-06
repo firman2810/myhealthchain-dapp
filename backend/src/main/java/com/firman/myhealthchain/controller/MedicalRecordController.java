@@ -33,11 +33,6 @@ public class MedicalRecordController {
             @PathVariable String patientId,
             Authentication authentication) {
 
-        // TODO: For DOCTOR role, verify approved access to this patient.
-        // For now, any authenticated user can retrieve records.
-        // PATIENT role should only access their own records (patientId == their
-        // username/NRIC).
-
         List<MedicalRecordResponse> records = recordService.getRecordsByPatientId(patientId);
         return ResponseEntity.ok(records);
     }
