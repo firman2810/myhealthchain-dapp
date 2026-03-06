@@ -1,31 +1,54 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Input, CardFooter } from './ui/elements';
-import { Activity, Stethoscope, User, ArrowRight, CheckCircle2, ArrowLeft, UserPlus } from 'lucide-react';
+import { ClipboardList, Stethoscope, User, ArrowRight, CheckCircle2, ArrowLeft, UserPlus, Activity, Loader2 } from 'lucide-react';
 import { apiFetch, setToken } from '../client';
 
 interface LoginProps {
-  onLogin: (role: 'doctor' | 'patient', displayName: string, username: string) => void;
+  onLogin: (role: 'doctor' | 'patient' | 'HOSPITAL_AUDITOR', displayName: string, username: string) => void;
+}
+
+interface Organization {
+  id: number;
+  name: string;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [role, setRole] = useState<'doctor' | 'patient'>('doctor');
+  const [role, setRole] = useState<'doctor' | 'patient' | 'HOSPITAL_AUDITOR'>('doctor');
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form fields
-  const [identifier, setIdentifier] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [organizationId, setOrganizationId] = useState<number | ''>('');
+
+  // Organization list
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [orgsLoading, setOrgsLoading] = useState(false);
+
+  // Fetch organizations when switching to register mode for doctor/auditor
+  useEffect(() => {
+    if (isRegistering && (role === 'doctor' || role === 'HOSPITAL_AUDITOR')) {
+      setOrgsLoading(true);
+      apiFetch<Organization[]>('/auth/organizations', { method: 'GET' })
+        .then((data) => setOrganizations(data))
+        .catch(() => setOrganizations([]))
+        .finally(() => setOrgsLoading(false));
+    }
+  }, [isRegistering, role]);
 
   // Reset state when switching between login/register
   useEffect(() => {
     setSuccess(false);
     setError(null);
   }, [isRegistering]);
+
+  const showOrgDropdown = isRegistering && (role === 'doctor' || role === 'HOSPITAL_AUDITOR');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,13 +63,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     try {
       if (isRegistering) {
+        const roleValue = role === 'doctor' ? 'DOCTOR' : role === 'HOSPITAL_AUDITOR' ? 'HOSPITAL_AUDITOR' : 'PATIENT';
         await apiFetch<{ message: string }>('/auth/register', {
           method: 'POST',
           body: JSON.stringify({
-            identifier,
+            username,
             password,
-            displayName: fullName || identifier,
-            role: role === 'doctor' ? 'DOCTOR' : 'PATIENT',
+            displayName: fullName || username,
+            role: roleValue,
+            organizationId: organizationId || null,
           }),
         });
         setSuccess(true);
@@ -55,15 +80,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           setSuccess(false);
         }, 2000);
       } else {
-        const data = await apiFetch<{ token: string; role: string; displayName: string }>('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ identifier, password }),
-        });
+        const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+        const [data] = await Promise.all([
+          apiFetch<{ token: string; role: string; displayName: string }>('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password }),
+          }),
+          sleep(1000)
+        ]);
         setToken(data.token);
         onLogin(
-          data.role === 'DOCTOR' ? 'doctor' : 'patient',
+          data.role === 'DOCTOR' ? 'doctor' : data.role === 'HOSPITAL_AUDITOR' ? 'HOSPITAL_AUDITOR' : 'patient',
           data.displayName,
-          identifier,
+          username,
         );
       }
     } catch (err: any) {
@@ -118,32 +147,45 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </CardHeader>
 
           <CardContent>
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-3 gap-4 mb-8">
               <button
                 type="button"
                 onClick={() => setRole('doctor')}
                 className={`group flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${role === 'doctor'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-inner'
-                    : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-inner'
+                  : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'
                   }`}
               >
                 <div className={`p-2 rounded-lg transition-colors ${role === 'doctor' ? 'bg-blue-600 text-white' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
                   <Stethoscope className="w-6 h-6" />
                 </div>
-                <span className="text-sm font-bold mt-2">Provider</span>
+                <span className="text-sm font-bold mt-2">Doctor</span>
               </button>
               <button
                 type="button"
                 onClick={() => setRole('patient')}
                 className={`group flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${role === 'patient'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-inner'
-                    : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-inner'
+                  : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'
                   }`}
               >
                 <div className={`p-2 rounded-lg transition-colors ${role === 'patient' ? 'bg-blue-600 text-white' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
                   <User className="w-6 h-6" />
                 </div>
                 <span className="text-sm font-bold mt-2">Patient</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('HOSPITAL_AUDITOR')}
+                className={`group flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${role === 'HOSPITAL_AUDITOR'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-inner'
+                  : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200 hover:text-slate-600'
+                  }`}
+              >
+                <div className={`p-2 rounded-lg transition-colors ${role === 'HOSPITAL_AUDITOR' ? 'bg-blue-600 text-white' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
+                  <ClipboardList className="w-6 h-6" />
+                </div>
+                <span className="text-sm font-bold mt-2">Auditor</span>
               </button>
             </div>
 
@@ -155,7 +197,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   </label>
                   <Input
                     type="text"
-                    placeholder={role === 'doctor' ? "Dr. Sarah Smith" : "John Doe"}
+                    placeholder={role === 'doctor' ? "Dr. Sarah Smith" : role === 'HOSPITAL_AUDITOR' ? "Auditor Name" : "John Doe"}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -166,13 +208,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
               <div className="space-y-2 group">
                 <label className="text-sm font-semibold text-slate-700 group-focus-within:text-blue-600 transition-colors">
-                  {role === 'doctor' ? 'Medical License ID' : 'NRIC'}
+                  {role === 'doctor' ? 'Medical License ID' : role === 'HOSPITAL_AUDITOR' ? 'Auditor ID' : 'NRIC'}
                 </label>
                 <Input
                   type="text"
-                  placeholder={role === 'doctor' ? "MD-883920" : "S1234567A"}
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder={role === 'doctor' ? "MD-883920" : role === 'HOSPITAL_AUDITOR' ? "AUD-001" : "990515011234"}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   className="bg-slate-50/50 focus:bg-white transition-all border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 />
@@ -208,14 +250,51 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               )}
 
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium animate-in fade-in duration-200">
-                  {error}
+              {/* Organization dropdown — shown during registration for doctor/auditor */}
+              {showOrgDropdown && (
+                <div className="space-y-2 group animate-in slide-in-from-top-2 duration-300">
+                  <label className="text-sm font-semibold text-slate-700 group-focus-within:text-blue-600 transition-colors">
+                    Organization
+                  </label>
+                  <select
+                    value={organizationId}
+                    onChange={(e) => setOrganizationId(e.target.value ? Number(e.target.value) : '')}
+                    required
+                    className="w-full h-10 rounded-md border border-slate-200 bg-slate-50/50 px-3 text-sm text-slate-700 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 focus:outline-none transition-all"
+                  >
+                    <option value="">
+                      {orgsLoading ? 'Loading organizations...' : 'Select your organization'}
+                    </option>
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {org.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
-              <Button className="w-full mt-2 h-12 text-md shadow-lg shadow-blue-200 active:scale-95 transition-transform" size="lg" disabled={loading}>
-                {isRegistering ? (
+              {error && (
+                <div
+                  className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium"
+                  style={{ animation: 'shake 0.4s ease-in-out' }}
+                >
+                  ⚠ {error}
+                </div>
+              )}
+
+              <Button
+                className={`w-full mt-2 h-12 text-md shadow-lg shadow-blue-200 transition-all ${loading && !isRegistering ? 'animate-pulse opacity-90 cursor-not-allowed' : 'active:scale-95'
+                  }`}
+                size="lg"
+                disabled={loading}
+              >
+                {loading && !isRegistering ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Signing in...
+                  </>
+                ) : isRegistering ? (
                   <>
                     Create Account <UserPlus className="ml-2 h-5 w-5" />
                   </>
@@ -257,7 +336,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             )}
 
             <p className="text-[10px] text-center text-slate-300 uppercase tracking-widest pt-4">
-              Protected by MyHealthChain Secure Enclave v2.4
+              Protected by MyHealthChain Secure Enclave v1.0
             </p>
           </CardFooter>
         </Card>

@@ -1,17 +1,37 @@
 // ── api.ts ── thin fetch wrapper with JWT & 401 handling ──
+// Uses sessionStorage so each browser tab has its OWN session.
+// Opening two accounts in two tabs no longer conflicts.
 
 const TOKEN_KEY = 'mhc_token';
+const SESSION_KEY = 'mhc_session';
+
+export interface SessionInfo {
+    role: string;
+    displayName: string;
+    username: string;
+}
 
 export function getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    return sessionStorage.getItem(TOKEN_KEY);
 }
 
 export function setToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.setItem(TOKEN_KEY, token);
+}
+
+export function setSession(info: SessionInfo): void {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(info));
+}
+
+export function getSession(): SessionInfo | null {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
 }
 
 export function clearToken(): void {
-    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
 }
 
 export async function apiFetch<T = unknown>(
