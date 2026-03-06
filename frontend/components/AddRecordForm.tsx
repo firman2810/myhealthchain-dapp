@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Button, Input, Textarea } from './ui/elements';
-import { Lock, FileText, CheckCircle2, Loader2, Database, ShieldCheck, User, Fingerprint } from 'lucide-react';
+import { Lock, FileText, CheckCircle2, Loader2, Database, ShieldCheck, User, Fingerprint, AlertCircle, Search } from 'lucide-react';
 import { RecordCreationStatus } from '../types';
 import { apiFetch } from '../client';
 
@@ -16,6 +16,11 @@ interface RecordResponse {
   chainHash: string;
 }
 
+interface PatientLookup {
+  id: number;
+  displayName: string;
+}
+
 const AddRecordForm: React.FC = () => {
   const [formData, setFormData] = useState({
     patientId: '',
@@ -27,14 +32,63 @@ const AddRecordForm: React.FC = () => {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Patient lookup state
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [patientFound, setPatientFound] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced NRIC lookup
+  useEffect(() => {
+    const nric = formData.patientId.trim();
+
+    // Reset lookup state when input changes
+    setPatientFound(false);
+    setLookupError(null);
+
+    if (nric.length < 3) {
+      setFormData(prev => ({ ...prev, patientName: '' }));
+      return;
+    }
+
+    // Debounce 500ms
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setLookupLoading(true);
+      setLookupError(null);
+      try {
+        const result = await apiFetch<PatientLookup>(`/patients/lookup?identifier=${encodeURIComponent(nric)}`);
+        setFormData(prev => ({ ...prev, patientName: result.displayName }));
+        setPatientFound(true);
+      } catch (err: any) {
+        if (err.message?.includes('404') || err.message?.includes('failed')) {
+          setLookupError('Patient not found. Verify the NRIC.');
+        } else {
+          setLookupError(err.message || 'Lookup failed');
+        }
+        setFormData(prev => ({ ...prev, patientName: '' }));
+      } finally {
+        setLookupLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [formData.patientId]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Prevent manual editing of patientName — it's auto-filled
+    if (name === 'patientName') return;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!patientFound) return; // block submission without valid patient
     setTxHash(null);
     setError(null);
 
@@ -63,6 +117,14 @@ const AddRecordForm: React.FC = () => {
     }
   };
 
+  const resetForm = () => {
+    setStatus(RecordCreationStatus.IDLE);
+    setFormData({ patientId: '', patientName: '', diagnosis: '', treatment: '' });
+    setError(null);
+    setPatientFound(false);
+    setLookupError(null);
+  };
+
   const renderStatusStep = (stepStatus: RecordCreationStatus, label: string, icon: React.ReactNode, isCurrent: boolean, isCompleted: boolean) => (
     <div className={`flex items-center space-x-4 p-4 rounded-xl border-2 transition-all duration-500 ${isCurrent ? 'bg-blue-50 border-blue-200 scale-102 shadow-md' : isCompleted ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
       <div className={`flex items-center justify-center w-10 h-10 rounded-xl shadow-sm ${isCurrent ? 'bg-blue-600 text-white animate-pulse' : isCompleted ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
@@ -76,6 +138,13 @@ const AddRecordForm: React.FC = () => {
       </div>
     </div>
   );
+
+  // Visual indicator for patient name field
+  const patientNameBorder = patientFound
+    ? 'border-emerald-300 bg-emerald-50/50'
+    : lookupError
+      ? 'border-red-300 bg-red-50/30'
+      : 'bg-slate-50 border-slate-200';
 
   return (
     <div className="grid lg:grid-cols-5 gap-8">
@@ -99,28 +168,45 @@ const AddRecordForm: React.FC = () => {
                   <div className="space-y-2 group">
                     <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Patient NRIC</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                      <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                       <Input
                         name="patientId"
-                        placeholder="e.g. 001022010001"
+                        placeholder="e.g. 990515011234"
                         className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
                         value={formData.patientId}
                         onChange={handleChange}
                         required
                       />
+                      {lookupLoading && (
+                        <Loader2 className="absolute right-3 top-3 w-4 h-4 text-blue-500 animate-spin" />
+                      )}
                     </div>
+                    {lookupError && (
+                      <p className="text-xs text-red-600 font-medium flex items-center mt-1">
+                        <AlertCircle className="w-3 h-3 mr-1" /> {lookupError}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2 group">
-                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Patient Full Name</label>
-                    <Input
-                      name="patientName"
-                      placeholder="e.g. John Doe"
-                      className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
-                      value={formData.patientName}
-                      onChange={handleChange}
-                      required
-                    />
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">
+                      Patient Full Name
+                      {patientFound && <span className="ml-2 text-emerald-600">✓ Verified</span>}
+                    </label>
+                    <div className="relative">
+                      <Input
+                        name="patientName"
+                        placeholder={lookupLoading ? "Looking up…" : "Auto-filled from NRIC lookup"}
+                        className={`h-11 transition-all cursor-not-allowed ${patientNameBorder}`}
+                        value={formData.patientName}
+                        onChange={handleChange}
+                        readOnly
+                        tabIndex={-1}
+                      />
+                      {patientFound && (
+                        <CheckCircle2 className="absolute right-3 top-3 w-4 h-4 text-emerald-500" />
+                      )}
+                    </div>
                   </div>
 
                   <div className="md:col-span-2 space-y-2 group">
@@ -197,11 +283,16 @@ const AddRecordForm: React.FC = () => {
           </CardContent>
           <CardFooter className="flex justify-end p-6 bg-slate-50/50 border-t border-slate-100">
             {status === RecordCreationStatus.IDLE ? (
-              <Button type="submit" onClick={handleSubmit} className="w-full sm:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all hover:scale-105 active:scale-95">
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={!patientFound || !formData.diagnosis || !formData.treatment}
+                className="w-full sm:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+              >
                 <Lock className="w-4 h-4 mr-2" /> Encrypt & Sign Record
               </Button>
             ) : (
-              <Button variant="outline" onClick={() => { setStatus(RecordCreationStatus.IDLE); setFormData({ patientId: '', patientName: '', diagnosis: '', treatment: '' }); setError(null); }} disabled={status !== RecordCreationStatus.COMPLETED} className="w-full sm:w-auto font-bold">
+              <Button variant="outline" onClick={resetForm} disabled={status !== RecordCreationStatus.COMPLETED} className="w-full sm:w-auto font-bold">
                 {status === RecordCreationStatus.COMPLETED ? "Start New Consultation" : "System Processing..."}
               </Button>
             )}

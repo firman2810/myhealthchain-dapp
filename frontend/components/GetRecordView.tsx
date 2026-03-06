@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Input, Badge } from './ui/elements';
-import { Search, Loader2, ShieldCheck, Database, AlertTriangle, Fingerprint, History, User, Activity } from 'lucide-react';
+import { Search, Loader2, ShieldCheck, Database, AlertTriangle, Fingerprint, History, User, Activity, ClipboardList } from 'lucide-react';
 import RecordCard from './RecordCard';
 import { MedicalRecord } from '../types';
 import { apiFetch } from '../client';
 
 const GetRecordView: React.FC = () => {
   const [nric, setNric] = useState('');
+  const [displayedNric, setDisplayedNric] = useState('');  // frozen after successful search
   const [isSearching, setIsSearching] = useState(false);
   const [verificationStep, setVerificationStep] = useState<number>(0);
   const [foundRecords, setFoundRecords] = useState<MedicalRecord[]>([]);
@@ -23,6 +24,7 @@ const GetRecordView: React.FC = () => {
     setFoundRecords([]);
     setError(null);
     setHasSearched(true);
+    const searchedNric = nric;  // capture the value at search time
 
     // Visual step 1: Query Ledger
     setVerificationStep(1);
@@ -38,6 +40,7 @@ const GetRecordView: React.FC = () => {
       await new Promise(r => setTimeout(r, 5000));
 
       setFoundRecords(records);
+      setDisplayedNric(searchedNric);  // freeze the displayed NRIC
     } catch (err: any) {
       setError(err.message || 'Failed to fetch records');
     } finally {
@@ -65,7 +68,7 @@ const GetRecordView: React.FC = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                 <Input
-                  placeholder="Patient NRIC (e.g. 001022010001)"
+                  placeholder="Patient NRIC (e.g. 990515011234)"
                   className="pl-10 h-11"
                   value={nric}
                   onChange={(e) => setNric(e.target.value)}
@@ -84,6 +87,10 @@ const GetRecordView: React.FC = () => {
             )}
           </CardContent>
         </Card>
+        <div className="flex items-center gap-2 mt-3 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl">
+          <ClipboardList className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-xs text-amber-700 font-medium">All record access is logged and auditable by your hospital auditor.</p>
+        </div>
       </div>
 
       {isSearching && (
@@ -109,7 +116,7 @@ const GetRecordView: React.FC = () => {
               <div>
                 <h3 className="text-xl font-bold">{foundRecords[0].patientName}</h3>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="font-mono text-[10px]">{nric}</Badge>
+                  <Badge variant="outline" className="font-mono text-[10px]">{displayedNric}</Badge>
                   <span className="text-xs text-slate-400 font-medium">• {foundRecords.length} Clinical Records Found</span>
                 </div>
               </div>

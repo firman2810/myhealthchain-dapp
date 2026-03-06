@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 public class RegisterRequest {
 
-    @NotBlank(message = "Identifier is required")
-    private String identifier;
+    @NotBlank(message = "Username is required")
+    private String username;
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
@@ -21,4 +21,6 @@ public class RegisterRequest {
 
     @NotNull(message = "Role is required")
     private Role role;
+
+    private Long organizationId; // optional, for doctors and auditors
 }
