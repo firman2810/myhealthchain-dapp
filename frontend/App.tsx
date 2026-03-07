@@ -93,7 +93,7 @@ const App: React.FC = () => {
 
       // Let the portal DOM render, then fade out the overlay
       setTimeout(() => setIsTransitioning(false), 300);
-    }, 1000);
+    }, 2000);
   };
 
   const handleLogout = () => {
