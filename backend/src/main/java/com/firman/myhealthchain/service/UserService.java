@@ -1,8 +1,10 @@
 package com.firman.myhealthchain.service;
 
 import com.firman.myhealthchain.dto.*;
+import com.firman.myhealthchain.model.Organization;
 import com.firman.myhealthchain.model.User;
 import com.firman.myhealthchain.model.UserPrincipal;
+import com.firman.myhealthchain.repo.OrganizationRepository;
 import com.firman.myhealthchain.repo.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +18,9 @@ public class UserService {
 
     @Autowired
     private UserRepo repo;
+
+    @Autowired
+    private OrganizationRepository orgRepo;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -40,7 +45,13 @@ public class UserService {
         repo.save(user);
 
         String token = jwtService.generateToken(user.getUsername(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getDisplayName());
+        String orgName = null;
+        if (user.getOrganizationId() != null) {
+            orgName = orgRepo.findById(user.getOrganizationId())
+                    .map(Organization::getName)
+                    .orElse(null);
+        }
+        return new AuthResponse(token, user.getRole().name(), user.getDisplayName(), orgName);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -50,7 +61,13 @@ public class UserService {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         User user = principal.getUser();
         String token = jwtService.generateToken(user.getUsername(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getDisplayName());
+        String orgName = null;
+        if (user.getOrganizationId() != null) {
+            orgName = orgRepo.findById(user.getOrganizationId())
+                    .map(Organization::getName)
+                    .orElse(null);
+        }
+        return new AuthResponse(token, user.getRole().name(), user.getDisplayName(), orgName);
     }
 
     public UserInfoResponse getCurrentUser(String username) {
