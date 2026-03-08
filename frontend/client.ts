@@ -9,6 +9,7 @@ export interface SessionInfo {
     role: string;
     displayName: string;
     username: string;
+    organizationName?: string;
 }
 
 export function getToken(): string | null {
