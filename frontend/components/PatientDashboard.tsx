@@ -62,8 +62,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
           </div>
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Secure Health Ledger</h2>
           <p className="text-slate-500 max-w-md mx-auto">
-            Your medical records are encrypted and stored across the decentralized network.
-            Initiate a secure fetch to decrypt and view your history.
+            Your records are encrypted and stored in the MyHealthChain private ledger. Start a secure retrieval to verify access and view your history.
           </p>
         </div>
 
@@ -77,15 +76,15 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
             <div className="grid gap-4">
               <div className="flex items-start space-x-3 text-sm text-slate-600">
                 <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 shrink-0 mt-0.5">1</div>
-                <p>Establishing secure connection to <strong>MyHealthChain Mainnet</strong> nodes.</p>
+                <p>Establishing secure connection to <strong>MyHealthChain </strong>network nodes.</p>
               </div>
               <div className="flex items-start space-x-3 text-sm text-slate-600">
                 <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 shrink-0 mt-0.5">2</div>
-                <p>Verifying decentralized identity and cryptographic signatures.</p>
+                <p>Verifying access permissions and audit policies.</p>
               </div>
               <div className="flex items-start space-x-3 text-sm text-slate-600">
                 <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 shrink-0 mt-0.5">3</div>
-                <p>Fetching and cross-referencing off-chain data hashes.</p>
+                <p>Retrieving encrypted records and validating integrity checks.</p>
               </div>
             </div>
 
@@ -99,11 +98,11 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
               onClick={handleStartFetch}
               className="w-full h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
-              <Download className="w-5 h-5 mr-3" /> Fetch My Medical Records
+              <Download className="w-5 h-5 mr-3" /> Retrieve My Medical Records
             </Button>
 
-            <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-tighter">
-              Manual trigger ensures you are aware of one-time decryption gas fees.
+            <p className="text-[10px] text-center text-slate-400 font-bold uppercase">
+              A secure retrieval service fee may apply.
             </p>
           </CardContent>
         </Card>
@@ -122,7 +121,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
               </div>
               <div>
                 <CardTitle className="text-xl">Transaction Confirmation</CardTitle>
-                <CardDescription>Authorize gas fee for ledger decryption</CardDescription>
+                <CardDescription>Secure retrieval processing fee</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -133,19 +132,18 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
                 <span>Estimate</span>
               </div>
               <div className="flex justify-between items-end border-b border-white/10 pb-4">
-                <span className="text-sm font-medium">Record Decryption</span>
-                <span className="text-lg font-mono font-bold text-emerald-400">0.000124 ETH</span>
+                <span className="text-sm font-medium">Network Processing Fee</span>
+                <span className="text-lg font-mono font-bold text-emerald-400">RM 20</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">Current Gwei: 12</span>
-                <span className="text-slate-400">Time: ~15 seconds</span>
+                <span className="text-slate-400">Estimated processing time: ~5 seconds</span>
               </div>
             </div>
 
             <div className="flex items-start space-x-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
               <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
               <p className="text-xs text-amber-800 leading-relaxed">
-                By continuing, you authorize a small gas fee for the MyHealthChain mainnet nodes to compute and decrypt your history. This is an immutable network charge.
+                By continuing, you authorize a service fee to securely retrieve and verify your encrypted medical history. This includes access validation and audit logging.
               </p>
             </div>
 
@@ -173,7 +171,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-extrabold text-slate-900">Synchronizing Ledger</h2>
-            <p className="text-slate-500 font-medium">Communicating with nodes to rebuild your history...</p>
+            <p className="text-slate-500 font-medium">Verifying access, retrieving encrypted records, and updating your audit trail...</p>
           </div>
         </div>
 
@@ -185,25 +183,25 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <h4 className="text-xs font-bold uppercase tracking-widest text-blue-400">Transaction Status</h4>
-              <Badge variant="outline" className="text-[10px] border-white/20 text-white">Broadcasting...</Badge>
+              <Badge variant="outline" className="text-[10px] border-white/20 text-white">Processing...</Badge>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Gas Paid</p>
-                <p className="text-sm font-mono text-emerald-400 font-bold">0.000124 ETH</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Service Fee Paid</p>
+                <p className="text-sm font-mono text-emerald-400 font-bold">RM 20</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Network Load</p>
-                <p className="text-sm font-bold">Low (12 Gwei)</p>
+                <p className="text-sm font-bold">Low</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Active Node</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Processing Node</p>
                 <div className="flex items-center text-sm font-bold">
                   <Globe className="w-3 h-3 mr-1 text-blue-400" /> SG-Ledger-Primary
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Block Index</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Ledger Sequence</p>
                 <p className="text-sm font-mono">#12,849,203</p>
               </div>
             </div>
@@ -254,21 +252,22 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Your Medical History</h2>
           <p className="text-slate-500 font-medium">Verified Read-Only access to your blockchain-stored records.</p>
         </div>
+
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={handleStartFetch} className="h-10 px-4 font-bold text-blue-600 hover:bg-blue-50">
-            <Download className="w-4 h-4 mr-2" /> Refresh Data
-          </Button>
           <div className="flex items-center space-x-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
             <div className="text-right">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Global Sync Status</p>
               <p className="text-sm font-bold text-emerald-600">100% Immutable</p>
             </div>
+
             <div className="p-2 bg-emerald-50 rounded-xl">
               <ShieldCheck className="w-6 h-6 text-emerald-600" />
             </div>
           </div>
         </div>
       </div>
+
+
 
       <div className="grid gap-6">
         {myRecords.length === 0 ? (
@@ -295,19 +294,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ username }) => {
         </Button>
       </div>
 
-      <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
-        <div className="flex items-start space-x-4">
-          <div className="p-2 bg-blue-100 rounded-xl">
-            <Calendar className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h4 className="font-bold text-blue-900">Privacy Notice</h4>
-            <p className="text-sm text-blue-700/80 leading-relaxed">
-              These records are fetched directly from the MyHealthChain distributed ledger. Your data is encrypted with your private key and can only be decrypted by you or authorized providers you've shared access with via the protocol.
-            </p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 };
