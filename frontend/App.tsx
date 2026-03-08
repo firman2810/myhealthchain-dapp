@@ -77,7 +77,7 @@ const App: React.FC = () => {
     document.title = PAGE_TITLES[location.pathname] || 'MyHealthChain';
   }, [location.pathname]);
 
-  const handleLogin = (role: UserRole, name: string, user: string) => {
+  const handleLogin = (role: UserRole, name: string, user: string, orgName?: string) => {
     // Start full-screen loading overlay
     setIsTransitioning(true);
 
@@ -87,7 +87,7 @@ const App: React.FC = () => {
       setDisplayName(name);
       setUsername(user);
       setIsAuthenticated(true);
-      setSession({ role, displayName: name, username: user });
+      setSession({ role, displayName: name, username: user, organizationName: orgName });
       const home = role === 'doctor' ? '/consultation' : role === 'HOSPITAL_AUDITOR' ? '/audit' : '/dashboard';
       navigate(home, { replace: true });
 
@@ -124,10 +124,14 @@ const App: React.FC = () => {
       userRole === 'HOSPITAL_AUDITOR' ? 'Auditor Portal' :
         'Patient Portal';
 
-  const badgeLabel =
-    userRole === 'doctor' ? 'License Verified' :
+  const badgeLabel = (() => {
+    if ((userRole === 'doctor' || userRole === 'HOSPITAL_AUDITOR') && savedSession?.organizationName) {
+      return savedSession.organizationName;
+    }
+    return userRole === 'doctor' ? 'License Verified' :
       userRole === 'HOSPITAL_AUDITOR' ? 'Auditor Credential Verified' :
         'Personal Identity Verified';
+  })();
 
   const avatarIcon =
     userRole === 'doctor' ? <Stethoscope className="w-5 h-5 text-blue-600" /> :
