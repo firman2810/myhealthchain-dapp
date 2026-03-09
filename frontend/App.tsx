@@ -31,11 +31,11 @@ type UserRole = 'doctor' | 'patient' | 'HOSPITAL_AUDITOR';
 
 // Page title mapping
 const PAGE_TITLES: Record<string, string> = {
-  '/login': 'Login | MyHealthChain',
+  '/login': 'MyHealthChain',
   '/consultation': 'Consultation | MyHealthChain',
-  '/history': 'Retrieve History | MyHealthChain',
+  '/history': 'History | MyHealthChain',
   '/dashboard': 'Dashboard | MyHealthChain',
-  '/audit': 'Audit Portal | MyHealthChain',
+  '/audit': 'Audit | MyHealthChain',
 };
 
 // ─── Route Guard ────────────────────────────────────────
