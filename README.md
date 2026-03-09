@@ -170,11 +170,3 @@ The frontend dev server will proxy API requests to the Spring Boot backend autom
 ## 📜 License
 
 This project is developed for **academic and research purposes**.
-
----
-
-<div align="center">
-
-*Built with ❤️ for better healthcare future*
-
-</div>
