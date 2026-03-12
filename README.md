@@ -85,12 +85,12 @@ The platform follows a **three-tier architecture**:
 
 ## Key Features
 
-- 🗂️ **Unified Medical Timeline** — Consolidates records from multiple hospitals into a single, chronological view
-- 🔐 **Hybrid Storage Architecture** — AES-256 encrypted files on IPFS with on-chain hash verification
-- 🔍 **Data Integrity Verification** — Automatic SHA-256 hash comparison detects unauthorized tampering
-- 📊 **Patient Dashboard** — Visual analytics with interactive charts for health data trends
-- 🕵️ **Auditor Portal** — Dedicated interface for compliance officers to review all access logs
-- 🔑 **JWT Authentication** — Secure, stateless session management with role-based route guards
+- **Unified Medical Timeline** — Consolidates records from multiple hospitals into a single, chronological view
+- **Hybrid Storage Architecture** — AES-256 encrypted files on IPFS with on-chain hash verification
+- **Data Integrity Verification** — Automatic SHA-256 hash comparison detects unauthorized tampering
+- **Patient Dashboard** — Visual analytics with interactive charts for health data trends
+- **Auditor Portal** — Dedicated interface for compliance officers to review all access logs
+- **JWT Authentication** — Secure, stateless session management with role-based route guards
 
 ---
 
@@ -104,25 +104,6 @@ The platform follows a **three-tier architecture**:
 | **Phase 4** | Auditor portal — Compliance logging & audit trail viewer | ✅ Complete |
 | **Phase 5** | Ethereum smart contracts — On-chain hash storage & access control | 🔲 Planned |
 | **Phase 6** | IPFS integration — Encrypted off-chain medical file storage | 🔲 Planned |
-
-
----
-
-## Project Status
-
-> **🟡 Active Development** — The project is under active development as an academic/research prototype.
-
-**What's working:**
-- ✅ Full JWT authentication flow with role-based access (Doctor, Patient, Auditor)
-- ✅ Medical record creation and retrieval via REST API
-- ✅ Interactive patient dashboard with data visualization
-- ✅ Auditor portal for compliance review
-- ✅ Client-side routing with role-specific route guards
-
-**What's next:**
-- 🔲 Ethereum smart contract deployment for on-chain hash verification
-- 🔲 IPFS integration for decentralized file storage
-
 
 ---
 
@@ -150,4 +131,4 @@ npm start
 
 ## License
 
-This project is developed for **academic and research purposes**.
+This project is developed for academic and research purposes.
