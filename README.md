@@ -1,4 +1,4 @@
-# 🩺 MyHealthChain — Blockchain-Powered Healthcare Portal
+# MyHealthChain — Blockchain-Based Healthcare Portal
 
 <div align="center">
 
@@ -13,7 +13,7 @@
 
 ---
 
-## 📖 Project Description
+## Project Description
 
 Modern healthcare systems suffer from **siloed medical records** spread across different hospitals and clinics. A patient visiting multiple facilities often ends up with scattered, inaccessible data — making accurate diagnosis slower and riskier.
 
@@ -29,7 +29,7 @@ This architecture ensures **privacy**, **data integrity**, and full **traceabili
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 <p align="center">
   <img src="https://www.pngall.com/wp-content/uploads/15/React-Logo-PNG-HD-Image.png" alt="React" height="55" />
@@ -51,7 +51,7 @@ The platform follows a **three-tier architecture**:
 
 ---
 
-## 🛠️ Technologies Used & Benefits
+## Technologies Used & Benefits
 
 ### Frontend
 | Technology | Purpose | Benefit |
@@ -83,7 +83,7 @@ The platform follows a **three-tier architecture**:
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 - 🗂️ **Unified Medical Timeline** — Consolidates records from multiple hospitals into a single, chronological view
 - 🔐 **Hybrid Storage Architecture** — AES-256 encrypted files on IPFS with on-chain hash verification
@@ -94,24 +94,7 @@ The platform follows a **three-tier architecture**:
 
 ---
 
-## 📸 Visuals
-
-### Login Page
-
-### Clinician Dashboard
-
-### Patient Dashboard
-
-### Audit Dashboard
-
-### Audit log page
-
-
-
-
----
-
-## 🗺️ Project Roadmap
+## Project Roadmap
 
 | Phase | Milestone | Status |
 |-------|----------|--------|
@@ -125,7 +108,7 @@ The platform follows a **three-tier architecture**:
 
 ---
 
-## 📊 Project Status
+## Project Status
 
 > **🟡 Active Development** — The project is under active development as an academic/research prototype.
 
@@ -143,7 +126,7 @@ The platform follows a **three-tier architecture**:
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Java 25+** and **Maven**
@@ -162,8 +145,6 @@ cd frontend
 npm install
 npm start
 ```
-
-The frontend dev server will proxy API requests to the Spring Boot backend automatically.
 
 ---
 
